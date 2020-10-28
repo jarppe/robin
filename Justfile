@@ -14,3 +14,8 @@ pack:
   tar czf robin.tgz node_modules -C ./dist .
   rm -fr ./dist
   yarn install
+
+
+install: pack
+  rm -fr /opt/robin/*
+  tar -C /opt/robin -xvzf robin.tgz
