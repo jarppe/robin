@@ -5,6 +5,7 @@ import { Client, SFTPStream } from "ssh2"
 
 type Progress = (transferred: number) => void
 
+
 export interface SFTP {
   send(localName: string, remoteName: string, mode: number, progress: Progress): Promise<void>
 
@@ -51,6 +52,10 @@ export class SFTPImpl implements SFTP {
   }
 
   async rm(remoteName) {
+    const stat = await this.stat(remoteName)
+    if (!stat) {
+      return
+    }
     return new Promise<void>((resolve, reject) => {
       return this.sftp.unlink(remoteName, (err) => {
         return err ? reject(err) : resolve()
@@ -59,15 +64,28 @@ export class SFTPImpl implements SFTP {
   }
 
   async mkdir(remoteName, mode) {
+    const stat = await this.stat(remoteName)
+    if (stat) {
+      if (!stat.isDirectory()) {
+        throw new Error(`trying to make directory ${ remoteName } but a file with same name exists`)
+      }
+      return this.setStat(remoteName, mode)
+    }
     return new Promise<void>((resolve, reject) => {
       return this.sftp.mkdir(remoteName, { mode }, (err) => {
+        if (err) console.log("rmdir; err.code", err.code, err.lang, Object.keys(err))
         return err ? reject(err) : resolve()
       })
     })
   }
 
   async rmdir(remoteName) {
+    const stat = await this.stat(remoteName)
+    if (!stat) {
+      return
+    }
     return new Promise<void>((resolve, reject) => {
+      // TODO: Make this `rm -fr`
       return this.sftp.rmdir(remoteName, (err) => {
         return err ? reject(err) : resolve()
       })
@@ -81,6 +99,15 @@ export class SFTPImpl implements SFTP {
       })
     })
   }
+
+  async setStat(remoteName: string, mode: number) {
+    return new Promise<void>((resolve, reject) => {
+      return this.sftp.setstat(remoteName, { mode }, (err) => {
+        return err ? reject(err) : resolve()
+      })
+    })
+  }
+
 }
 
 

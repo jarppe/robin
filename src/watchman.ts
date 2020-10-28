@@ -39,7 +39,13 @@ const subscribe = async ({ watch, relativePath }: { watch: any, relativePath: st
   const subscriptionName = "robin"
   const subscribe = ["subscribe", watch, subscriptionName, {
     expression: ["allof",
-      ["match", "**/*", "wholename"],
+      ["match", "**/*", "wholename", {"includedotfiles": true}],
+      // TODO: SHould have .robinignore
+      ["not", ["dirname", ".git"]],
+      ["not", ["match", ".git", "wholename"]],
+      ["not", ["dirname", ".idea"]],
+      ["not", ["match", ".idea", "wholename"]],
+      // TODO: Should be configurable:
       ["not", ["dirname", "node_modules"]],
       ["not", ["match", "node_modules", "wholename"]],
       ["not", ["dirname", "dist"]],

@@ -71,11 +71,14 @@ const main = async (opts: Config) => {
 
 
 process.on("SIGUSR2", () => {
+  console.log("nodemon sent SIGUSR2")
   process.exit(0)
 })
 
 
 process.on("exit", () => {
+  console.log("exit")
+  closeWatchman()
   closeSFTP()
 })
 
